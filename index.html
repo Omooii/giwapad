@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GiwaPad — Token Launchpad on GIWA Sepolia (Ammora SDK)</title>
+<meta name="description" content="GiwaPad is a testnet token launchpad built with the Ammora SDK (@ammora-protocol/sdk) on GIWA Sepolia. Launch tokens, trade on the bonding curve, and track graduation. Testnet only — no real funds.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">▲</span>
+    <div>
+      <h1>GiwaPad</h1>
+      <p class="tagline">Token launchpad on GIWA Sepolia · built with the Ammora SDK</p>
+    </div>
+  </div>
+  <div class="wallet-box">
+    <span id="net-badge" class="badge badge-warn">Not connected</span>
+    <button id="btn-connect" class="btn btn-primary">Connect wallet</button>
+  </div>
+</header>
+
+<div class="banner">
+  <strong>Testnet only.</strong> GiwaPad runs on GIWA Sepolia (chain 91342). Tokens here have no value.
+  Trades use WETH as the quote asset; gas is paid in testnet ETH. Never send real funds.
+</div>
+
+<main>
+  <section class="card" id="config-card">
+    <h2>Launchpad Config <span id="core-badge" class="badge">checking contracts…</span></h2>
+    <p class="muted">Every token launched here uses the GiwaPad platform Config. One Config, many tokens — the
+    Config sets the curve, fees and graduation rules.</p>
+    <dl class="kv" id="config-kv">
+      <div><dt>Config ID</dt><dd id="cfg-id">—</dd></div>
+      <div><dt>Status</dt><dd id="cfg-enabled">—</dd></div>
+      <div><dt>Owner</dt><dd id="cfg-owner">—</dd></div>
+      <div><dt>Quote asset</dt><dd id="cfg-quote">—</dd></div>
+      <div><dt>Token decimals</dt><dd id="cfg-decimals">—</dd></div>
+      <div><dt>Graduation threshold</dt><dd id="cfg-threshold">—</dd></div>
+      <div><dt>Total supply / launch</dt><dd id="cfg-supply">—</dd></div>
+      <div><dt>Cliff fee</dt><dd id="cfg-fee">—</dd></div>
+      <div><dt>Launch fee</dt><dd id="cfg-createfee">—</dd></div>
+    </dl>
+  </section>
+
+  <section class="card" id="launch-card">
+    <h2>Launch a token</h2>
+    <p class="muted">Creates a new token and its pre-graduation bonding curve (ALC) in one transaction.
+    You become the token's Creator. Launching is free of protocol fees on this Config (gas only).</p>
+    <form id="form-launch">
+      <label>Token name
+        <input id="in-name" type="text" placeholder="e.g. Giwa Cat" maxlength="64" required>
+      </label>
+      <label>Symbol
+        <input id="in-symbol" type="text" placeholder="e.g. GCAT" maxlength="16" required>
+      </label>
+      <label>Metadata URI
+        <input id="in-meta" type="text" value="https://example.com/giwapad-token.json" maxlength="256">
+      </label>
+      <button type="submit" class="btn btn-primary" id="btn-launch">Launch token</button>
+    </form>
+    <div id="launch-result" class="result" hidden></div>
+  </section>
+
+  <section class="card" id="trade-card">
+    <h2>Trade &amp; graduation</h2>
+    <label>Launch
+      <select id="sel-launch"></select>
+    </label>
+    <label>…or paste a curve address
+      <input id="in-curve" type="text" placeholder="0x…" maxlength="42">
+    </label>
+    <button id="btn-load-curve" class="btn">Load curve</button>
+
+    <div id="curve-box" hidden>
+      <h3 id="curve-title">—</h3>
+      <dl class="kv">
+        <div><dt>Status</dt><dd id="cv-status">—</dd></div>
+        <div><dt>Token</dt><dd id="cv-token">—</dd></div>
+        <div><dt>Creator</dt><dd id="cv-creator">—</dd></div>
+        <div><dt>Curve fee</dt><dd id="cv-fee">—</dd></div>
+        <div><dt>Quote raised</dt><dd id="cv-raised">—</dd></div>
+        <div><dt>Indicative price</dt><dd id="cv-price">—</dd></div>
+        <div><dt>Graduated pool</dt><dd id="cv-pool">—</dd></div>
+      </dl>
+      <div class="progress"><div id="cv-progress-bar" class="progress-bar" style="width:0%"></div></div>
+      <p class="muted" id="cv-progress-label">—</p>
+
+      <div class="balances">
+        <span>ETH <strong id="bal-eth">—</strong></span>
+        <span>WETH <strong id="bal-weth">—</strong></span>
+        <span><span id="bal-token-sym">Token</span> <strong id="bal-token">—</strong></span>
+        <button id="btn-refresh" class="btn btn-small">Refresh</button>
+      </div>
+
+      <div class="trade-grid">
+        <div class="trade-box">
+          <h4>Buy with WETH</h4>
+          <label>Pay (WETH)
+            <input id="in-buy" type="text" inputmode="decimal" placeholder="0.001">
+          </label>
+          <p class="quote" id="quote-buy">—</p>
+          <button id="btn-buy" class="btn btn-buy">Buy</button>
+        </div>
+        <div class="trade-box">
+          <h4>Sell tokens</h4>
+          <label>Pay (<span id="sell-sym">tokens</span>)
+            <input id="in-sell" type="text" inputmode="decimal" placeholder="1000">
+          </label>
+          <p class="quote" id="quote-sell">—</p>
+          <button id="btn-sell" class="btn btn-sell">Sell</button>
+        </div>
+        <div class="trade-box">
+          <h4>Wrap ETH → WETH</h4>
+          <p class="muted">Buys need WETH. Wrap a little testnet ETH first.</p>
+          <label>Amount (ETH)
+            <input id="in-wrap" type="text" inputmode="decimal" placeholder="0.002">
+          </label>
+          <button id="btn-wrap" class="btn">Wrap</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="launches-card">
+    <h2>Launches</h2>
+    <p class="muted">Featured launch plus tokens you launched from this browser (kept in local storage).</p>
+    <ul id="launch-list" class="launch-list"></ul>
+  </section>
+
+  <section class="card" id="log-card">
+    <h2>Activity log</h2>
+    <ol id="log" class="log"></ol>
+  </section>
+
+  <footer class="muted">
+    GiwaPad · GIWA Sepolia testnet · Ammora SDK 0.3.9 · Config #56 ·
+    <a href="https://sepolia-explorer.giwa.io" target="_blank" rel="noopener">Explorer</a> ·
+    <a href="https://docs.ammora.org/guides/launchpad" target="_blank" rel="noopener">Ammora launchpad guide</a>
+  </footer>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
